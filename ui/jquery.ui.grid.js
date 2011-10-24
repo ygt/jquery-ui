@@ -171,7 +171,7 @@ $.widget( "ui.grid", {
 	},
 
 	_newRow: function( item ) {
-		return $.tmpl( this.options.rowTemplate, item ).data( "grid-item", item );
+		return $( $.render( this.options.rowTemplate, item ) ).data( "grid-item", item );
 	},
 
 	// can be customized by subwidgets
@@ -281,11 +281,13 @@ $.widget( "ui.grid", {
 			if ( column.template ) {
 				return $( column.template ).html();
 			}
-			return "<td class=\"ui-widget-content\">${" + column.property + "}</td>";
+			return "<td class=\"ui-widget-content\">{{=" + column.property + "}}</td>";
 		}).join( "" );
 		template = "<tr>" + template + "</tr>";
 		// compile the template
-		this.options.rowTemplate = $.template( template );
+		var templateName = "grid-template-" + (+new Date);
+		$.template( templateName, template );
+		this.options.rowTemplate = templateName;
 	},
 
 	_source: function() {
