@@ -1,7 +1,7 @@
 /*
  * jQuery UI Button @VERSION
  *
- * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
@@ -58,13 +58,15 @@ $.widget( "ui.button", {
 			.bind( "reset.button", formResetHandler );
 
 		if ( typeof this.options.disabled !== "boolean" ) {
-			this.options.disabled = this.element.prop( "disabled" );
+			this.options.disabled = !!this.element.prop( "disabled" );
+		} else {
+			this.element.prop( "disabled", this.options.disabled );
 		}
 
 		this._determineButtonType();
 		this.hasTitle = !!this.buttonElement.attr( "title" );
 
-		var self = this,
+		var that = this,
 			options = this.options,
 			toggleButton = this.type === "checkbox" || this.type === "radio",
 			hoverClass = "ui-state-hover" + ( !toggleButton ? " ui-state-active" : "" ),
@@ -72,10 +74,6 @@ $.widget( "ui.button", {
 
 		if ( options.label === null ) {
 			options.label = this.buttonElement.html();
-		}
-
-		if ( this.element.is( ":disabled" ) ) {
-			options.disabled = true;
 		}
 
 		this.buttonElement
@@ -106,10 +104,10 @@ $.widget( "ui.button", {
 		this.element
 			.bind( "focus.button", function() {
 				// no need to check disabled, focus won't be triggered anyway
-				self.buttonElement.addClass( focusClass );
+				that.buttonElement.addClass( focusClass );
 			})
 			.bind( "blur.button", function() {
-				self.buttonElement.removeClass( focusClass );
+				that.buttonElement.removeClass( focusClass );
 			});
 
 		if ( toggleButton ) {
@@ -117,7 +115,7 @@ $.widget( "ui.button", {
 				if ( clickDragged ) {
 					return;
 				}
-				self.refresh();
+				that.refresh();
 			});
 			// if mouse moves between mousedown and mouseup (drag) set clickDragged flag
 			// prevents issue where button state changes but checkbox/radio checked state
@@ -147,7 +145,7 @@ $.widget( "ui.button", {
 					return false;
 				}
 				$( this ).toggleClass( "ui-state-active" );
-				self.buttonElement.attr( "aria-pressed", self.element[0].checked );
+				that.buttonElement.attr( "aria-pressed", that.element[0].checked );
 			});
 		} else if ( this.type === "radio" ) {
 			this.buttonElement.bind( "click.button", function() {
@@ -155,9 +153,9 @@ $.widget( "ui.button", {
 					return false;
 				}
 				$( this ).addClass( "ui-state-active" );
-				self.buttonElement.attr( "aria-pressed", "true" );
+				that.buttonElement.attr( "aria-pressed", "true" );
 
-				var radio = self.element[ 0 ];
+				var radio = that.element[ 0 ];
 				radioGroup( radio )
 					.not( radio )
 					.map(function() {
@@ -174,7 +172,7 @@ $.widget( "ui.button", {
 					}
 					$( this ).addClass( "ui-state-active" );
 					lastActive = this;
-					$( document ).one( "mouseup", function() {
+					that.document.one( "mouseup", function() {
 						lastActive = null;
 					});
 				})
@@ -269,7 +267,7 @@ $.widget( "ui.button", {
 	},
 
 	_setOption: function( key, value ) {
-		this._super( "_setOption", key, value );
+		this._super( key, value );
 		if ( key === "disabled" ) {
 			if ( value ) {
 				this.element.prop( "disabled", true );
@@ -319,14 +317,14 @@ $.widget( "ui.button", {
 			return;
 		}
 		var buttonElement = this.buttonElement.removeClass( typeClasses ),
-			buttonText = $( "<span></span>" )
+			buttonText = $( "<span></span>", this.document[0] )
 				.addClass( "ui-button-text" )
 				.html( this.options.label )
 				.appendTo( buttonElement.empty() )
 				.text(),
 			icons = this.options.icons,
 			multipleIcons = icons.primary && icons.secondary,
-			buttonClasses = [];  
+			buttonClasses = [];
 
 		if ( icons.primary || icons.secondary ) {
 			if ( this.options.text ) {
@@ -365,7 +363,7 @@ $.widget( "ui.buttonset", {
 	_create: function() {
 		this.element.addClass( "ui-buttonset" );
 	},
-	
+
 	_init: function() {
 		this.refresh();
 	},
@@ -375,12 +373,12 @@ $.widget( "ui.buttonset", {
 			this.buttons.button( "option", key, value );
 		}
 
-		this._super( "_setOption", key, value );
+		this._super( key, value );
 	},
-	
+
 	refresh: function() {
 		var rtl = this.element.css( "direction" ) === "rtl";
-		
+
 		this.buttons = this.element.find( this.options.items )
 			.filter( ":ui-button" )
 				.button( "refresh" )
